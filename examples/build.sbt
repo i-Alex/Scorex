@@ -22,3 +22,9 @@ testForkedParallel in Test := true
 test in assembly := {}
 
 coverageExcludedPackages := "examples\\.hybrid\\.api\\.http.*"
+
+assemblyMergeStrategy in assembly := {
+  case x if Assembly.isConfigFile(x) => MergeStrategy.concat
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x => MergeStrategy.first
+}
