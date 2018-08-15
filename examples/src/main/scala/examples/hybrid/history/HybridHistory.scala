@@ -18,6 +18,7 @@ import scorex.core.utils.{NetworkTimeProvider, ScorexEncoding, ScorexLogging}
 import scorex.core.validation.RecoverableModifierError
 import scorex.core.{ModifierId, ModifierTypeId, NodeViewModifier}
 import scorex.crypto.hash.Blake2b256
+import scorex.core.logger.LoggerClient
 
 import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
@@ -179,6 +180,14 @@ class HybridHistory(val storage: HistoryStorage,
       case powBlock: PowBlock => powBlockAppend(powBlock)
       case posBlock: PosBlock => posBlockAppend(posBlock)
     }
+
+    val blockType = block match {
+      case powBlock: PowBlock => "pow"
+      case posBlock: PosBlock => "pos"
+    }
+
+    LoggerClient.getInstance().logToServer(s"${blockType} " +
+      s"block height = ${storage.heightOf(block.id)}, id = ${encoder.encode(block.id)}")
 
     log.info(s"History: block ${encoder.encode(block.id)} appended to chain with score ${storage.heightOf(block.id)}. " +
       s"Best score is ${storage.bestChainScore}. " +

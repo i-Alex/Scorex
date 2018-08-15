@@ -42,13 +42,15 @@ case class NetworkSettings(nodeName: String,
                            controllerTimeout: Option[FiniteDuration],
                            maxModifiersCacheSize: Int)
 
+case class LoggerServerSettings(address: InetSocketAddress)
+
 case class ScorexSettings(dataDir: File,
                           logDir: File,
                           network: NetworkSettings,
                           restApi: RESTApiSettings,
-                          ntp: NetworkTimeProviderSettings
+                          ntp: NetworkTimeProviderSettings,
+                          logger: LoggerServerSettings
                          )
-
 
 object ScorexSettings extends ScorexLogging with SettingsReaders {
 

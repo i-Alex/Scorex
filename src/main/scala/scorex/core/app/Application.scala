@@ -12,6 +12,7 @@ import scorex.core.settings.ScorexSettings
 import scorex.core.transaction.Transaction
 import scorex.core.utils.{NetworkTimeProvider, ScorexLogging}
 import scorex.core.{NodeViewHolder, PersistentNodeViewModifier}
+import scorex.core.logger.LoggerClient
 
 import scala.concurrent.ExecutionContext
 
@@ -72,6 +73,9 @@ trait Application extends ScorexLogging {
   val networkControllerRef: ActorRef = NetworkControllerRef("networkController", settings.network,
                                                             messagesHandler, features, upnp,
                                                             peerManagerRef, timeProvider)
+
+  LoggerClient.getInstance().applySettings(settings.logger.address);
+  LoggerClient.getInstance().setNodeName(settings.network.nodeName)
 
   lazy val combinedRoute = CompositeHttpService(actorSystem, apiRoutes, settings.restApi, swaggerConfig).compositeRoute
 
