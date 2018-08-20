@@ -24,7 +24,7 @@ class LoggerServer(object):
 		self.sock.listen(20)
 		while True:
 			client, address = self.sock.accept()
-			client.settimeout(60)
+			client.settimeout(60*10)
 			threading.Thread(target = self.listenToClient,args = (client,address)).start()
 
     def listenToClient(self, client, address):
