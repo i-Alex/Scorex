@@ -3,9 +3,11 @@
 import os
 import shutil
 import subprocess
+import time
+from activity.nodesactivity import NodesActivity
 
 # initial configs values
-nodes = 4
+nodes = 2
 apiAddress = "127.0.0.1"
 apiPort = 8200
 bindPort = 8300
@@ -61,3 +63,8 @@ def runScorexNodes(nodeNumber):
 clear()
 createConfigs(nodes)
 runScorexNodes(nodes)
+
+time.sleep(20)
+na = NodesActivity([
+			{"name" : "node1", "url" : "http://127.0.0.1:8200", "password" : "pass"},
+			{"name" : "node2", "url" : "http://127.0.0.1:8201", "password" : "pass"}])
