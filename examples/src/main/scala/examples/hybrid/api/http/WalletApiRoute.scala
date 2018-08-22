@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.Route
 import examples.commons.{SimpleBoxTransaction, SimpleBoxTransactionMemPool, Value}
 import examples.hybrid.history.HybridHistory
 import examples.hybrid.state.HBoxStoredState
+import examples.hybrid.wallet.GenesisStateGenerator.{encoder, pks, w1}
 import examples.hybrid.wallet.HBoxWallet
 import io.circe.parser._
 import io.circe.syntax._
@@ -12,6 +13,7 @@ import scorex.core.api.http.{ApiError, ApiResponse, ApiRouteWithFullView}
 import scorex.core.settings.RESTApiSettings
 import scorex.core.transaction.box.proposition.PublicKey25519Proposition
 import scorex.core.utils.ScorexEncoding
+import scorex.crypto.encode.Base58
 import scorex.crypto.signatures.PublicKey
 
 import scala.util.{Failure, Success, Try}
@@ -28,7 +30,7 @@ case class WalletApiRoute(override val settings: RESTApiSettings, nodeViewHolder
   val DefaultFee: Int = 100
 
   override val route: Route = (pathPrefix("wallet") & withCors) {
-    balances ~ transfer
+    balances ~ transfer ~ generateSecret
   }
 
   def transfer: Route = (get & path("transfer")) {
@@ -67,6 +69,16 @@ case class WalletApiRoute(override val settings: RESTApiSettings, nodeViewHolder
         "totalBalance" -> boxes.map(_.value.toLong).sum.toString.asJson,
         "publicKeys" -> wallet.publicKeys.map(pk => encoder.encode(pk.pubKeyBytes)).asJson,
         "boxes" -> boxes.asJson
+      )
+    }
+  }
+
+  def generateSecret: Route = (get & path("generateSecret")) {
+    withNodeView { view =>
+      val wallet = view.vault
+      val secret = wallet.generateNewSecret()
+      ApiResponse(
+        "pubkeys" -> wallet.publicKeys.map(pk => Base58.encode(pk.pubKeyBytes)).asJson
       )
     }
   }
