@@ -40,8 +40,11 @@ class HybridApp(val settingsFilename: String) extends Application {
 
   override val nodeViewHolderRef: ActorRef = HybridNodeViewHolderRef(hybridSettings, timeProvider)
 
+  val miner: ActorRef = PowMinerRef(nodeViewHolderRef, hybridSettings.mining)
+  val forger: ActorRef = PosForgerRef(hybridSettings, nodeViewHolderRef)
+
   override val apiRoutes: Seq[ApiRoute] = Seq[ApiRoute](
-    DebugApiRoute(settings.restApi, nodeViewHolderRef),
+    DebugApiRoute(settings.restApi, nodeViewHolderRef, miner),
     WalletApiRoute(settings.restApi, nodeViewHolderRef),
     StatsApiRoute(settings.restApi, nodeViewHolderRef),
     UtilsApiRoute(settings.restApi),
@@ -50,9 +53,6 @@ class HybridApp(val settingsFilename: String) extends Application {
   )
 
   override val swaggerConfig: String = Source.fromResource("api/testApi.yaml").getLines.mkString("\n")
-
-  val miner: ActorRef = PowMinerRef(nodeViewHolderRef, hybridSettings.mining)
-  val forger: ActorRef = PosForgerRef(hybridSettings, nodeViewHolderRef)
 
   val localInterface: ActorRef = HLocalInterfaceRef(nodeViewHolderRef, miner, forger, hybridSettings.mining)
 

@@ -33,7 +33,7 @@ case class WalletApiRoute(override val settings: RESTApiSettings, nodeViewHolder
     balances ~ transfer ~ generateSecret
   }
 
-  def transfer: Route = (get & path("transfer")) {
+  def transfer: Route = (post & path("transfer")) {
     entity(as[String]) { body =>
       withAuth {
         withNodeView { view =>
@@ -76,9 +76,11 @@ case class WalletApiRoute(override val settings: RESTApiSettings, nodeViewHolder
   def generateSecret: Route = (get & path("generateSecret")) {
     withNodeView { view =>
       val wallet = view.vault
-      val secret = wallet.generateNewSecret()
+      wallet.generateNewSecret()
+      // to do:
+      //wallet.scanPersistent(view.history.bestPosBlock) // find spenadable boxes in the last block
       ApiResponse(
-        "pubkeys" -> wallet.publicKeys.map(pk => Base58.encode(pk.pubKeyBytes)).asJson
+        "pubkeys" -> wallet.publicKeys.map(pk => encoder.encode(pk.pubKeyBytes)).asJson
       )
     }
   }

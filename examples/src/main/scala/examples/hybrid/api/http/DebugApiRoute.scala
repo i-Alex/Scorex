@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.Route
 import examples.commons.SimpleBoxTransactionMemPool
 import examples.hybrid.blocks.{HybridBlock, PosBlock, PowBlock}
 import examples.hybrid.history.HybridHistory
+import examples.hybrid.mining.PowMiner.ReceivableMessages.{StartMining, StopMining}
 import examples.hybrid.state.HBoxStoredState
 import examples.hybrid.wallet.HBoxWallet
 import io.circe.syntax._
@@ -16,13 +17,13 @@ import scorex.core.utils.{ScorexEncoding, ScorexLogging}
 import scala.util.Try
 
 
-case class DebugApiRoute(override val settings: RESTApiSettings, nodeViewHolderRef: ActorRef)
+case class DebugApiRoute(override val settings: RESTApiSettings, nodeViewHolderRef: ActorRef, miner: ActorRef)
                         (implicit val context: ActorRefFactory)
   extends ApiRouteWithFullView[HybridHistory, HBoxStoredState, HBoxWallet, SimpleBoxTransactionMemPool] 
     with ScorexEncoding {
 
   override val route: Route = (pathPrefix("debug") & withCors) {
-    infoRoute ~ chain ~ delay ~ myblocks ~ generators
+    infoRoute ~ chain ~ delay ~ myblocks ~ generators ~ startMining ~ stopMining
   }
 
   def delay: Route = {
@@ -91,6 +92,26 @@ case class DebugApiRoute(override val settings: RESTApiSettings, nodeViewHolderR
   def chain: Route = (get & path("chain")) {
     withNodeView { view =>
       ApiResponse("history" -> view.history.toString)
+    }
+  }
+
+  def startMining: Route = (get & path("startMining")) {
+    withNodeView { view =>
+      miner ! StartMining
+      //wallet.scanPersistent(view.history.bestPosBlock) // find spenadable boxes in the last block
+      ApiResponse(
+        "response" -> "ok"
+      )
+    }
+  }
+
+  def stopMining: Route = (get & path("stopMining")) {
+    withNodeView { view =>
+      miner ! StopMining
+      //wallet.scanPersistent(view.history.bestPosBlock) // find spenadable boxes in the last block
+      ApiResponse(
+        "response" -> "ok"
+      )
     }
   }
 }
