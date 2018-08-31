@@ -46,7 +46,7 @@ case class HBoxWallet(seed: Array[Byte], store: LSMStore)
       .map(_.data)
       .map(ba => walletBoxSerializer.parseBytes(ba))
       .map(_.get)
-      .filter(_.box.value > 0)
+      .filter(_.box.value > 0).filter(s => secretByPublicImage(s.box.proposition).isDefined)
   }
 
   override def publicKeys: Set[PublicKey25519Proposition] = secrets.map(_.publicImage)
@@ -75,11 +75,11 @@ case class HBoxWallet(seed: Array[Byte], store: LSMStore)
 
   override def scanOffchain(txs: Seq[SimpleBoxTransaction]): HBoxWallet = this
 
-  override def scanPersistent(modifier: HybridBlock): HBoxWallet = {
+      override def scanPersistent(modifier: HybridBlock): HBoxWallet = {
     log.debug(s"Applying modifier to wallet: ${encoder.encode(modifier.id)}")
     val changes = HBoxStoredState.changes(modifier).get
 
-    val newBoxes = changes.toAppend.filter(s => secretByPublicImage(s.box.proposition).isDefined).map(_.box).map { box =>
+    val newBoxes = changes.toAppend/*.filter(s => secretByPublicImage(s.box.proposition).isDefined)*/.map(_.box).map { box =>
       val boxTransaction = modifier.transactions.find(t => t.newBoxes.exists(tb => java.util.Arrays.equals(tb.id, box.id)))
       val txId = boxTransaction.map(_.id).getOrElse(bytesToId(Array.fill(32)(0: Byte)))
       val ts = boxTransaction.map(_.timestamp).getOrElse(modifier.timestamp)
