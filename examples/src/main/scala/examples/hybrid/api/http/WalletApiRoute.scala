@@ -76,10 +76,13 @@ case class WalletApiRoute(override val settings: RESTApiSettings, nodeViewHolder
   def generateSecret: Route = (get & path("generateSecret")) {
     withNodeView { view =>
       val wallet = view.vault
-      wallet.generateNewSecret()
+      var oldKeys: Set[PublicKey25519Proposition] = wallet.publicKeys
+      var newKey = wallet.generateNewSecret().publicKeys.diff(oldKeys).toArray.head
+
       // to do:
-      //wallet.scanPersistent(view.history.bestPosBlock) // find spenadable boxes in the last block
+      //wallet.scanPersistent(view.history.bestPosBlock) // find spendable boxes in the last block
       ApiResponse(
+        "newkey" -> encoder.encode(newKey.pubKeyBytes).asJson,
         "pubkeys" -> wallet.publicKeys.map(pk => encoder.encode(pk.pubKeyBytes)).asJson
       )
     }
