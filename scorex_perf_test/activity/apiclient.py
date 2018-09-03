@@ -27,6 +27,12 @@ class APIClient(object):
 	def debugChain(self):
 		return requests.get(self.url + "/debug/chain")
 
+	def debugStartMining(self):
+		return requests.get(self.url + "/debug/startMining")
+
+	def debugStopMining(self):
+		return requests.get(self.url + "/debug/stopMining")
+
 	# Stats #
 	def statsTail(self, count):
 		return requests.get(self.url + "/stats/tail/" + str(count))
@@ -75,10 +81,10 @@ class APIClient(object):
 
 
 	def walletTransfer(self, amount, recipient, fee):
-		return requests.get(self.url + "/wallet/transfer", params = {"amount" : amount, "recipient" : recipient, "fee" : fee})
+		return requests.post(self.url + "/wallet/transfer", json = {"amount" : amount, "recipient" : recipient, "fee" : fee})
 	
 	def walletTransferWithDefaultFee(self, amount, recipient):
-		return requests.get(self.url + "/wallet/transfer", params = {"amount" : amount, "recipient" : recipient})
+		return requests.post(self.url + "/wallet/transfer", json = {"amount" : amount, "recipient" : recipient})
 
 	def walletGenerateSecret(self):
 		return requests.get(self.url + "/wallet/generateSecret")
