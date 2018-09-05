@@ -31,7 +31,7 @@ case class WalletApiRoute(override val settings: RESTApiSettings, nodeViewHolder
     balances ~ transfer
   }
 
-  def transfer: Route = (get & path("transfer")) {
+  def transfer: Route = (post & path("transfer")) {
     entity(as[String]) { body =>
       withAuth {
         withNodeView { view =>
