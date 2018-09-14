@@ -14,6 +14,7 @@ import scorex.core.transaction.box.proposition.PublicKey25519Proposition
 import scorex.core.utils.ScorexEncoding
 import scorex.crypto.signatures.PublicKey
 
+import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
 
 
@@ -46,7 +47,9 @@ case class WalletApiRoute(override val settings: RESTApiSettings, nodeViewHolder
               @SuppressWarnings(Array("org.wartremover.warts.TraversableOps", "org.wartremover.warts.OptionPartial"))
               val recipient: PublicKey25519Proposition = PublicKey25519Proposition(PublicKey @@ encoder.decode((json \\ "recipient").head.asString.get).get)
               val fee: Long = (json \\ "fee").headOption.flatMap(_.asNumber).flatMap(_.toLong).getOrElse(DefaultFee)
-              val tx = SimpleBoxTransaction.create(wallet, Seq((recipient, Value @@ amount)), fee).get
+              val ex: ArrayBuffer[Array[Byte]] = ArrayBuffer()
+              view.pool.take(view.pool.size).foreach(unconfirmed => unconfirmed.boxIdsToOpen.foreach(id => ex += id))
+              val tx = SimpleBoxTransaction.create(wallet, Seq((recipient, Value @@ amount)), fee, ex).get
               nodeViewHolderRef ! LocallyGeneratedTransaction[SimpleBoxTransaction](tx)
               tx.asJson
             } match {
