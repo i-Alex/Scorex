@@ -211,7 +211,6 @@ trait NodeViewHolder[TX <: Transaction, PMOD <: PersistentNodeViewModifier]
     and in case of failed application of some modifier in a progressInfo, rollback point in an alternative should be not
     earlier than a rollback point of an initial progressInfo.
    **/
-
   @tailrec
   private def updateState(history: HIS,
                           state: MS,
@@ -262,6 +261,7 @@ trait NodeViewHolder[TX <: Transaction, PMOD <: PersistentNodeViewModifier]
             updateState(uf.history, uf.state, alternativeProgressInfo, uf.suffix)
           case None => (uf.history, Success(uf.state), uf.suffix)
         }
+
       case Failure(e) =>
         log.error("Rollback failed: ", e)
         context.system.eventStream.publish(RollbackFailed)
@@ -270,11 +270,25 @@ trait NodeViewHolder[TX <: Transaction, PMOD <: PersistentNodeViewModifier]
     }
   }
 
+  protected def validate(pmod: PMOD): Boolean
+
   //todo: update state in async way?
   protected def pmodModify(pmod: PMOD): Unit =
     if (!history().contains(pmod.id)) {
       context.system.eventStream.publish(StartingPersistentModifierApplication(pmod))
-
+      try {
+        if (validate(pmod)) {
+          log.info(s"Modifier ${pmod.encodedId} validation was succesfull")
+        }
+        else {
+          log.info(s"Modifier ${pmod.encodedId} validation was failed")
+          return
+        }
+      } catch {
+        case e: Exception =>
+          log.info(s"Modifier ${pmod.encodedId} validation was failed (exception)")
+          return
+      }
       log.info(s"Apply modifier ${pmod.encodedId} of type ${pmod.modifierTypeId} to nodeViewHolder")
 
       history().append(pmod) match {
@@ -303,7 +317,7 @@ trait NodeViewHolder[TX <: Transaction, PMOD <: PersistentNodeViewModifier]
 
 
               case Failure(e) =>
-                log.warn(s"Can`t apply persistent modifier (id: ${pmod.encodedId}, contents: $pmod) to minimal state", e)
+                log.warn(s"Can`t apply persistent modifier (id: ${pmod.encodedId}, contents: $pmod) to minimal state", e.getMessage())
                 updateNodeView(updatedHistory = Some(newHistory))
                 context.system.eventStream.publish(SemanticallyFailedModification(pmod, e))
             }

@@ -1,5 +1,6 @@
 package examples.hybrid
 
+import akka.actor.Status.Success
 import akka.actor.{ActorRef, ActorSystem, Props}
 import examples.commons._
 import examples.hybrid.blocks._
@@ -7,15 +8,18 @@ import examples.hybrid.history.{HybridHistory, HybridSyncInfo}
 import examples.hybrid.mining.{HybridMiningSettings, HybridSettings}
 import examples.hybrid.state.HBoxStoredState
 import examples.hybrid.wallet.HBoxWallet
+import io.iohk.iodb.ByteArrayWrapper
 import scorex.core.serialization.Serializer
 import scorex.core.settings.ScorexSettings
 import scorex.core.transaction.Transaction
 import scorex.core.transaction.box.proposition.PublicKey25519Proposition
-import scorex.core.transaction.state.PrivateKey25519Companion
+import scorex.core.transaction.state.{BoxStateChanges, PrivateKey25519Companion}
 import scorex.core.utils.{NetworkTimeProvider, ScorexEncoding, ScorexLogging}
 import scorex.core.{ModifierTypeId, NodeViewHolder, NodeViewModifier}
 import scorex.crypto.encode.Base58
 import scorex.crypto.signatures.PublicKey
+
+import scala.util.{Failure, Try}
 
 
 class HybridNodeViewHolder(hybridSettings: HybridSettings,
@@ -61,6 +65,18 @@ class HybridNodeViewHolder(hybridSettings: HybridSettings,
         HBoxWallet.readOrGenerate(hybridSettings.walletSettings, 1),
         SimpleBoxTransactionMemPool.emptyPool))
     } else None
+  }
+
+  override protected def validate(pmod: HybridBlock): Boolean = {
+    minimalState().validate(pmod)
+    val cs = minimalState().changes(pmod).get
+    val boxIdsToRemove = cs.toRemove.map(_.boxId).map(ByteArrayWrapper.apply)
+    val boxesToAdd = cs.toAppend.map(_.box).map(b => ByteArrayWrapper(b.id) -> ByteArrayWrapper(b.bytes))
+
+    if (boxIdsToRemove.distinct.size != boxIdsToRemove.size || boxesToAdd.distinct.size != boxesToAdd.size) {
+      return false
+    }
+    return true
   }
 }
 

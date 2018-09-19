@@ -6,7 +6,7 @@ import scorex.core.transaction.MemoryPool
 import scorex.core.utils.ScorexLogging
 
 import scala.collection.concurrent.TrieMap
-import scala.util.{Success, Try}
+import scala.util.{Success, Try, Failure}
 
 
 case class SimpleBoxTransactionMemPool(unconfirmed: TrieMap[ModifierId, SimpleBoxTransaction])
@@ -22,13 +22,28 @@ case class SimpleBoxTransactionMemPool(unconfirmed: TrieMap[ModifierId, SimpleBo
   override def getAll(ids: Seq[ModifierId]): Seq[SimpleBoxTransaction] = ids.flatMap(getById)
 
   //modifiers
-  override def put(tx: SimpleBoxTransaction): Try[SimpleBoxTransactionMemPool] = Success {
-    unconfirmed.put(tx.id, tx)
-    this
+  override def put(tx: SimpleBoxTransaction): Try[SimpleBoxTransactionMemPool] = {
+    var isOk: Boolean = true
+    unconfirmed.foreach(utx => {
+      if (utx._2.boxIdsToOpen.map(ByteArrayWrapper.apply).intersect(tx.boxIdsToOpen.map(ByteArrayWrapper.apply)).size > 0) {
+        isOk = false
+      }
+    })
+    if (isOk) {
+      unconfirmed.put(tx.id, tx)
+      Success(this)
+    }
+    else {
+      log.info(s"Transaction contains ${tx.id} boxes to remove, that are already in mempool.")
+      Failure(new Exception(s"Transaction contains ${tx.id} boxes to remove, that are already in mempool."))
+    }
   }
 
   //todo
-  override def put(txs: Iterable[SimpleBoxTransaction]): Try[SimpleBoxTransactionMemPool] = Success(putWithoutCheck(txs))
+  override def put(txs: Iterable[SimpleBoxTransaction]): Try[SimpleBoxTransactionMemPool] = {
+    txs.foreach(tx => put(tx))
+    Success(this)
+  }
 
   override def putWithoutCheck(txs: Iterable[SimpleBoxTransaction]): SimpleBoxTransactionMemPool = {
     txs.foreach(tx => unconfirmed.put(tx.id, tx))

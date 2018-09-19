@@ -63,7 +63,7 @@ case class HBoxStoredState(store: LSMStore, override val version: VersionTag) ex
         psb.transactions.foreach(tx => validate(tx).get)
     }
   }.recoverWith{case t =>
-    log.warn(s"Not valid modifier ${mod.encodedId}", t)
+    log.warn(s"Not valid modifier ${mod.encodedId}", t.getMessage)
     Failure(t)
   }
 
