@@ -186,8 +186,12 @@ class HybridHistory(val storage: HistoryStorage,
       case posBlock: PosBlock => "pos"
     }
 
-    LoggerClient.getInstance().logToServer(s"${blockType} " +
-      s"block height = ${storage.heightOf(block.id)}, id = ${encoder.encode(block.id)}")
+    val blockHeight: String = storage.heightOf(block.id) match {
+      case None => "-1"
+      case Some(l: Long) => l.toString()
+    }
+    LoggerClient.getInstance().logToServer(s"${blockType}," +
+      s"${blockHeight},id=${encoder.encode(block.id)}")
 
     log.info(s"History: block ${encoder.encode(block.id)} appended to chain with score ${storage.heightOf(block.id)}. " +
       s"Best score is ${storage.bestChainScore}. " +

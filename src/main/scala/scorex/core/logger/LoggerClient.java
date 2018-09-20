@@ -57,7 +57,7 @@ public class LoggerClient {
             }
         }
 
-        outToServer.print("<" + nodeName + "> " + logMessage);
+        outToServer.print(nodeName + "," + logMessage);
         outToServer.flush();
         return true;
     }
