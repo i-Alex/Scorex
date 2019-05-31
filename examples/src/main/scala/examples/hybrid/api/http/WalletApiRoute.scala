@@ -64,7 +64,7 @@ case class WalletApiRoute(override val settings: RESTApiSettings, nodeViewHolder
     }
   }
 
-  def balances: Route = (get & path("balances")) {
+  def balances: Route = (post & path("balances")) {
     withNodeView { view =>
       val wallet = view.vault
       val boxes = wallet.boxes().map(_.box)
@@ -76,7 +76,7 @@ case class WalletApiRoute(override val settings: RESTApiSettings, nodeViewHolder
     }
   }
 
-  def generateSecret: Route = (get & path("generateSecret")) {
+  def generateSecret: Route = (post & path("generateSecret")) {
     withNodeView { view =>
       val wallet = view.vault
       var oldKeys: Set[PublicKey25519Proposition] = wallet.publicKeys

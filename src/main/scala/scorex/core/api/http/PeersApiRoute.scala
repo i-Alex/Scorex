@@ -23,7 +23,7 @@ case class PeersApiRoute(peerManager: ActorRef,
 
   override lazy val route: Route = pathPrefix("peers") { allPeers ~ connectedPeers ~ blacklistedPeers ~ connect }
 
-  def allPeers: Route = (path("all") & get) {
+  def allPeers: Route = (path("all") & post) {
     val result = askActor[Map[InetSocketAddress, PeerInfo]](peerManager, GetAllPeers).map {
       _.map { case (address, peerInfo) =>
         PeerInfoResponse.fromAddressAndInfo(address, peerInfo)
@@ -32,7 +32,7 @@ case class PeersApiRoute(peerManager: ActorRef,
     ApiResponse(result)
   }
 
-  def connectedPeers: Route = (path("connected") & get) {
+  def connectedPeers: Route = (path("connected") & post) {
     val now = System.currentTimeMillis()
     val result = askActor[Seq[Handshake]](peerManager, GetConnectedPeers).map {
       _.map { handshake =>
@@ -60,7 +60,7 @@ case class PeersApiRoute(peerManager: ActorRef,
     }
   }
 
-  def blacklistedPeers: Route = (path("blacklisted") & get) {
+  def blacklistedPeers: Route = (path("blacklisted") & post) {
     val result = askActor[Seq[String]](peerManager, GetBlacklistedPeers).map(BlacklistedPeers(_).asJson)
     ApiResponse(result)
   }

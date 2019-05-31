@@ -25,11 +25,11 @@ case class UtilsApiRoute(override val settings: RESTApiSettings)(implicit val co
     seedRoute ~ length ~ hashBlake2b
   }
 
-  def seedRoute: Route = (get & path("seed")) {
+  def seedRoute: Route = (post & path("seed")) {
     ApiResponse(seed(SeedSize))
   }
 
-  def length: Route = (get & path("seed" / IntNumber)) { length =>
+  def length: Route = (post & path("seed" / IntNumber)) { length =>
     ApiResponse(seed(length))
   }
 

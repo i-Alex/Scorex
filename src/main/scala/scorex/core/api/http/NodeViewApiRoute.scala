@@ -71,7 +71,7 @@ case class NodeViewApiRoute[TX <: Transaction]
     }
   }
 
-  def pool: Route = (get & path("pool")) {
+  def pool: Route = (post & path("pool")) {
     withMempool { mpd =>
 
       val txAsJson = mpd.transactions.map(t => {
@@ -90,13 +90,13 @@ case class NodeViewApiRoute[TX <: Transaction]
     }
   }
 
-  def openSurface: Route = (get & path("openSurface")) {
+  def openSurface: Route = (post & path("openSurface")) {
     withOpenSurface { os =>
       ApiResponse(os.ids.map(encoder.encode).asJson)
     }
   }
 
-  def persistentModifierById: Route = (get & path("persistentModifier" / Segment)) { encodedId =>
+  def persistentModifierById: Route = (post & path("persistentModifier" / Segment)) { encodedId =>
     withPersistentModifier(encodedId) { tx =>
       val clazz = ClassTag(tx.getClass).runtimeClass
       ApiResponse(serializerReg.toJson(clazz, tx))

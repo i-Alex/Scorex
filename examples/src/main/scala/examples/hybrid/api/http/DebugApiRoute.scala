@@ -27,7 +27,7 @@ case class DebugApiRoute(override val settings: RESTApiSettings, nodeViewHolderR
   }
 
   def delay: Route = {
-    (get & path("delay" / Segment / IntNumber)) { case (encodedSignature, count) =>
+    (post & path("delay" / Segment / IntNumber)) { case (encodedSignature, count) =>
       withNodeView { view =>
         val result: Try[String] = for {
           id <- encoder.decode(encodedSignature)
@@ -38,7 +38,7 @@ case class DebugApiRoute(override val settings: RESTApiSettings, nodeViewHolderR
     }
   }
 
-  def infoRoute: Route = (get & path("info")) {
+  def infoRoute: Route = (post & path("info")) {
     withNodeView { view =>
       val bestBlockJson = view.history.bestBlock match {
         case block: PosBlock => block.asJson
@@ -55,7 +55,7 @@ case class DebugApiRoute(override val settings: RESTApiSettings, nodeViewHolderR
     }
   }
 
-  def myblocks: Route = (get & path("myblocks")) {
+  def myblocks: Route = (post & path("myblocks")) {
     withNodeView { view =>
       val pubkeys = view.vault.publicKeys
 
@@ -81,7 +81,7 @@ case class DebugApiRoute(override val settings: RESTApiSettings, nodeViewHolderR
     }
   }
 
-  def generators: Route = (get & path("generators")) {
+  def generators: Route = (post & path("generators")) {
     withNodeView { view =>
       val map: Map[String, Int] = view.history.generatorDistribution()
         .map(d => encoder.encode(d._1.pubKeyBytes) -> d._2)
@@ -89,13 +89,13 @@ case class DebugApiRoute(override val settings: RESTApiSettings, nodeViewHolderR
     }
   }
 
-  def chain: Route = (get & path("chain")) {
+  def chain: Route = (post & path("chain")) {
     withNodeView { view =>
       ApiResponse("history" -> view.history.toString)
     }
   }
 
-  def startMining: Route = (get & path("startMining")) {
+  def startMining: Route = (post & path("startMining")) {
     withNodeView { view =>
       miner ! StartMining
       //wallet.scanPersistent(view.history.bestPosBlock) // find spenadable boxes in the last block
@@ -105,7 +105,7 @@ case class DebugApiRoute(override val settings: RESTApiSettings, nodeViewHolderR
     }
   }
 
-  def stopMining: Route = (get & path("stopMining")) {
+  def stopMining: Route = (post & path("stopMining")) {
     withNodeView { view =>
       miner ! StopMining
       //wallet.scanPersistent(view.history.bestPosBlock) // find spenadable boxes in the last block

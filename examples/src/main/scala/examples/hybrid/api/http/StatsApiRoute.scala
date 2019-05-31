@@ -23,7 +23,7 @@ case class StatsApiRoute(override val settings: RESTApiSettings, nodeViewHolderR
     tail ~ meanDifficulty
   }
 
-  def tail: Route = (get & path("tail" / IntNumber)) { count =>
+  def tail: Route = (post & path("tail" / IntNumber)) { count =>
     withNodeView { view =>
       val lastBlockIds = view.history.lastBlockIds(view.history.bestBlock, count)
       val tail = lastBlockIds.map(id => encoder.encode(id).asJson)
@@ -31,7 +31,7 @@ case class StatsApiRoute(override val settings: RESTApiSettings, nodeViewHolderR
     }
   }
 
-  def meanDifficulty: Route = (get & path("meanDifficulty" / IntNumber / IntNumber)) { (start, end) =>
+  def meanDifficulty: Route = (post & path("meanDifficulty" / IntNumber / IntNumber)) { (start, end) =>
     withNodeView { view =>
       ApiTry {
         val count = (view.history.height - start).toInt
