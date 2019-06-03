@@ -36,14 +36,14 @@ public class LoggerClient {
                 clientSocket.connect(new InetSocketAddress(addr, port));
             }
         } catch (IOException e) {
-            System.out.println("!!! Failed to connect to Logger Server.");
+            //System.out.println("!!! Failed to connect to Logger Server.");
             return false;
         }
 
         try {
             outToServer = new PrintStream(clientSocket.getOutputStream());
         } catch (IOException e) {
-            System.out.println("!!! Failed to get output stream to Logger Server.");
+            //System.out.println("!!! Failed to get output stream to Logger Server.");
             return false;
         }
         return true;
@@ -52,7 +52,7 @@ public class LoggerClient {
     public boolean logToServer(String logMessage) {
         if(!clientSocket.isConnected()) {
             if(!tryToConnect()) {
-                System.out.println("!!! Failed to send logs to Logger Server: can't connect.");
+                //System.out.println("!!! Failed to send logs to Logger Server: can't connect.");
                 return false;
             }
         }
