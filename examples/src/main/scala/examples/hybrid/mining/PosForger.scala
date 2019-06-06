@@ -112,7 +112,12 @@ object PosForger extends ScorexLogging {
       view: CurrentView[HybridHistory, HBoxStoredState, HBoxWallet, SimpleBoxTransactionMemPool] =>
 
         val diff = view.history.posDifficulty
-        val pairCompleted = view.history.pairCompleted
+        val pairCompleted = {
+          if (view.vault.secretByPublicImage(view.history.bestPowBlock.generatorProposition).isDefined)
+            view.history.pairCompleted
+          else
+            true // Only creator of last PoW block will start to forge next PoS Block
+        }
         val bestPowBlock = view.history.bestPowBlock
         val boxes = view.vault.boxes().map(_.box).filter(box => view.state.closedBox(box.id).isDefined)
         val boxKeys = boxes.flatMap(b => view.vault.secretByPublicImage(b.proposition).map(s => (b, s)))
